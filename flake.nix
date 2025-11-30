@@ -28,27 +28,23 @@
           pkgs,
           ...
         }:
+        let
+          lake2nix = pkgs.callPackage lean4-nix.lake { };
+        in
         {
           _module.args.pkgs = import nixpkgs {
             inherit system;
             overlays = [
-              # (lean4-nix.readToolchainFile {
-              #   toolchain = ./lean-toolchain;
-              #   binary = system != "aarch64-darwin";
-              # })
-              (lean4-nix.readToolchain {
-                toolchain = "leanprover/lean4:v4.24.0";
+              (lean4-nix.readToolchainFile {
+                toolchain = ./lean-toolchain;
                 binary = system != "aarch64-darwin";
               })
             ];
           };
 
-          packages.default =
-            ((lean4-nix.lake { inherit pkgs; }).mkPackage {
-              src = ./.;
-            }).executable;
-
-          packages.lean = pkgs.lean;
+          packages.default = lake2nix.mkPackage {
+            src = ./.;
+          };
 
           devShells.default = pkgs.mkShell {
             packages = with pkgs.lean; [ lean-all ];
